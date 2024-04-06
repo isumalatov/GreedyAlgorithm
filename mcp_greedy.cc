@@ -1,4 +1,4 @@
-// Ilyas Umalatov X7278165E
+//Ilyas Umalatov X7278165E
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -6,15 +6,17 @@
 
 using namespace std;
 
-int mcp_greedy1(const vector<vector<int>> &matrix, int rows, int cols)
+int mcp_greedy1(const vector<vector<int>> &matrix, int rows, int cols, vector<pair<int, int>> &path)
 {
-    int x = 0, y = 0;
-    int count = 0;
+    int x = 0;
+    int y = 0;
+    int count = matrix[x][y];
+    path.push_back({x, y});
     do
     {
         if (x == rows - 1 && y == cols - 1)
         {
-            return matrix[x][y] + count;
+            return count;
         }
         int right = INT_MAX;
         int down = INT_MAX;
@@ -32,7 +34,13 @@ int mcp_greedy1(const vector<vector<int>> &matrix, int rows, int cols)
             diag = matrix[x + 1][y + 1];
         }
         int minimo = min(right, min(down, diag));
-        if (minimo == right)
+        if (minimo == diag)
+        {
+            x++;
+            y++;
+            count += diag;
+        }
+        else if (minimo == right)
         {
             y++;
             count += right;
@@ -42,23 +50,25 @@ int mcp_greedy1(const vector<vector<int>> &matrix, int rows, int cols)
             x++;
             count += down;
         }
-        else
-        {
-            x++;
-            y++;
-            count += diag;
-        }
+        path.push_back({x, y});
     } while (true);
 }
 
-int mcp_greedy2(const vector<vector<int>> &matrix, int rows, int cols)
+int mcp_greedy2(const vector<vector<int>> &matrix, int rows, int cols, vector<pair<int, int>> &path)
 {
     int x = rows - 1;
     int y = cols - 1;
     int count = matrix[x][y];
+    path.push_back({x, y});
     do
     {
-        int up = INT_MAX, left = INT_MAX, diag = INT_MAX;
+        if (x == 0 && y == 0)
+        {
+            return count;
+        }
+        int up = INT_MAX;
+        int left = INT_MAX;
+        int diag = INT_MAX;
         if (x > 0)
         {
             up = matrix[x - 1][y];
@@ -72,7 +82,13 @@ int mcp_greedy2(const vector<vector<int>> &matrix, int rows, int cols)
             diag = matrix[x - 1][y - 1];
         }
         int minimo = min(left, min(up, diag));
-        if (minimo == left)
+        if (minimo == diag)
+        {
+            x--;
+            y--;
+            count += diag;
+        }
+        else if (minimo == left)
         {
             y--;
             count += left;
@@ -82,21 +98,46 @@ int mcp_greedy2(const vector<vector<int>> &matrix, int rows, int cols)
             x--;
             count += up;
         }
-        else
-        {
-            x--;
-            y--;
-            count += diag;
-        }
-    } while (x > 0 || y > 0);
+        path.push_back({x, y});
+    } while (true);
 }
 
-void mcp_greedy(const vector<vector<int>> &matrix, int rows, int cols, int* results)
+void mcp_greedy(const vector<vector<int>> &matrix, int rows, int cols, int *results, vector<pair<int, int>> &path1, vector<pair<int, int>> &path2)
 {
-    results[0] = mcp_greedy1(matrix, rows, cols);
-    results[1] = mcp_greedy2(matrix, rows, cols);
+    results[0] = mcp_greedy1(matrix, rows, cols, path1);
+    results[1] = mcp_greedy2(matrix, rows, cols, path2);
 }
 
+void mcp_print_path(const vector<vector<int>> &matrix, const vector<pair<int, int>> &path, int rows, int cols)
+{
+    int coste = 0;
+    vector<vector<char>> charMatrix(rows, vector<char>(cols, '.'));
+    for (int i = 0; i < path.size(); ++i)
+    {
+        charMatrix[path[i].first][path[i].second] = 'x';
+    }
+
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            cout << charMatrix[i][j];
+        }
+        cout << '\n';
+    }
+
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (charMatrix[i][j] == 'x')
+            {
+                coste += matrix[i][j];
+            }
+        }
+    }
+    cout << coste << endl;
+}
 int main(int argc, char *argv[])
 {
     bool p2D = false;
@@ -146,9 +187,21 @@ int main(int argc, char *argv[])
     }
 
     int results[2];
-    mcp_greedy(matrix, rows, cols, results);
+    vector<pair<int, int>> path1;
+    vector<pair<int, int>> path2;
+    mcp_greedy(matrix, rows, cols, results, path1, path2);
     cout << results[0] << " " << results[1] << endl;
-
+    if (p2D)
+    {
+        if (results[0] < results[1])
+        {
+            mcp_print_path(matrix, path1, rows, cols);
+        }
+        else
+        {
+            mcp_print_path(matrix, path2, rows, cols);
+        }
+    }
     file.close();
     return 0;
 }
