@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     cout << results[0] << " " << results[1] << endl;
     if (p2D)
     {
-        if (results[0] < results[1])
+        if (results[0] <= results[1])
         {
             mcp_print_path(matrix, path1, rows, cols);
         }
